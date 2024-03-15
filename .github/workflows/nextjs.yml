@@ -1,0 +1,34 @@
+name: NextJS CI
+on:
+  push:
+    paths:
+        - 'nextjs/**'
+    branches:
+      - main
+      - '**'
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Install dependencies
+        run: npm install
+        working-directory: nextjs
+      - name: Lint
+        run: npm run lint
+        working-directory: nextjs
+      - name: Test
+        run: npm run test
+        working-directory: nextjs
+      - name: Build
+        if: success()
+        run: npm run build
+        working-directory: nextjs
+      - name: Build and Push Docker Image
+        if: success()
+        run: |
+          echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+          docker build -t xflawless/nextjs:latest .
+          docker push xflawless/nextjs:latest
+        working-directory: nextjs
